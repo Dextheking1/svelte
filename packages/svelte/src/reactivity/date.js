@@ -1,8 +1,14 @@
-/** @import { Derived } from '#client' */
+/** @import { Derived, Effect } from '#client' */
 import { derived } from '../internal/client/index.js';
 import { set, state } from '../internal/client/reactivity/sources.js';
 import { tag } from '../internal/client/dev/tracing.js';
-import { active_reaction, get, set_active_reaction } from '../internal/client/runtime.js';
+import {
+	active_effect,
+	active_reaction,
+	get,
+	set_active_effect,
+	set_active_reaction
+} from '../internal/client/runtime.js';
 import { DEV } from 'esm-env';
 
 var inited = false;
@@ -47,6 +53,9 @@ export class SvelteDate extends Date {
 
 	#reaction = active_reaction;
 
+	/** @type {Effect | null} */
+	#effect = active_effect;
+
 	/** @param {any[]} params */
 	constructor(...params) {
 		// @ts-ignore
@@ -87,7 +96,9 @@ export class SvelteDate extends Date {
 						// lazily create the derived, but as though it were being
 						// created at the same time as the class instance
 						const reaction = active_reaction;
+						const effect = active_effect;
 						set_active_reaction(this.#reaction);
+						set_active_effect(this.#effect);
 
 						d = derived(() => {
 							get(this.#time);
@@ -102,6 +113,7 @@ export class SvelteDate extends Date {
 						this.#deriveds.set(method, d);
 
 						set_active_reaction(reaction);
+						set_active_effect(effect);
 					}
 
 					return get(d);
